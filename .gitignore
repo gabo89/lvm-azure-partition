@@ -1,0 +1,4 @@
+*.rpm
+*.vdi
+.vagrant/
+

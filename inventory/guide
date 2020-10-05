@@ -1,0 +1,12 @@
+ansible-playbook -i inventory/host --limit machine1 playbook.yml
+ansible-playbook -i inventory/host  playbook.yml
+
+ansible-playbook -i inventory/host --limit machine3 playbook.yml --tags base-role
+
+ansible-playbook -i inventory/host  playbook.yml --tags base-role
+
+ansible-playbook -i inventory/host --limit machine1 playbook.yml --tags k8s-master
+
+
+
+

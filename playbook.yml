@@ -1,0 +1,388 @@
+- hosts: maquina1
+  gather_facts: yes  
+  become: true
+  become_method: "sudo"
+  vars:
+  - volumegroup: "myvolgroup"
+  - volume1: "hompartition"
+  - volume2: "varpartition"
+  - volume3: "etcpartition"
+  - volume4: "optpartition"
+  - volume5: "tmppartition"
+  - move1: "home" 
+  - move2: "var"
+  - move3: "etc"
+  - move4: "opt"
+  - move5: "tmp"   
+  tasks:
+  - name: install lvm2
+    yum: name=lvm2 state=present
+
+  - name: Disable SELinux
+    selinux:
+      state: disabled
+
+  - name: install lsof
+    yum: name=lsof state=present
+
+  - name: install net-tools
+    yum: name=net-tools state=present
+
+  - name: show size sda
+    debug: 
+      msg: devices size SDA is {{ansible_devices.sda.size}}
+
+  - name: show size sdb
+    debug: 
+      msg: devices size SDB is {{ansible_devices.sdb.size}}
+
+  - name: Create a new primary partition /dev/sda1
+    parted:
+      device: /dev/sda
+      number: 1
+      state: present
+    when: ansible_devices.sda.size == "100.00 GB"
+    register: salidasda 
+
+  - name: Create a new primary partition /dev/sdb1
+    parted:
+      device: /dev/sdb
+      number: 1
+      state: present
+    when: ansible_devices.sdb.size == "100.00 GB"
+    register: salidasdb 
+
+  - name: Build a list of all the volume names sdb missing.
+    set_fact:
+      volumesforvg: "[ '{{ salidasda.disk.dev }}1' ]"
+    when: salidasda.disk.dev is defined    
+
+  - name: Build a list of all the volume names sda missing.
+    set_fact:
+      volumesforvg: "[ '{{ salidasdb.disk.dev }}1' ]"
+    when: salidasdb.disk.dev is defined  
+
+  - name: Print the volume names to the console.
+    debug: var=volumesforvg
+
+  - name: Create a volume group with {{ volumesforvg.0 }} 
+    lvg:
+      vg: "{{ volumegroup }}"
+      pvs: "{{ volumesforvg.0 }}"
+      pesize: 32
+
+  - name: Create a logical volume 
+    lvol:
+      vg: "{{ volumegroup }}"
+      lv: "{{ volume1 }}"
+      size: 20%VG
+      force: yes
+  
+  - name: create filesystem {{ volume1 }}
+    filesystem: dev="/dev/{{ volumegroup }}/{{ volume1 }}" fstype=xfs
+
+  - name: Create a logical volume 
+    lvol:
+      vg: "{{ volumegroup }}"
+      lv: "{{ volume2 }}"
+      size: 20%VG
+      force: yes
+  
+  - name: create filesystem {{ volume2 }}
+    filesystem: dev="/dev/{{ volumegroup }}/{{ volume2 }}" fstype=xfs
+
+  - name: Create a logical volume 
+    lvol:
+      vg: "{{ volumegroup }}"
+      lv: "{{ volume3 }}"
+      size: 20%VG
+      force: yes
+  
+  - name: create filesystem {{ volume3 }}
+    filesystem: dev="/dev/{{ volumegroup }}/{{ volume3 }}" fstype=xfs
+
+  - name: Create a logical volume 
+    lvol:
+      vg: "{{ volumegroup }}"
+      lv: "{{ volume4 }}"
+      size: 20%VG
+      force: yes
+  
+  - name: create filesystem {{ volume4 }}
+    filesystem: dev="/dev/{{ volumegroup }}/{{ volume4 }}" fstype=xfs
+
+  - name: Create a logical volume 
+    lvol:
+      vg: "{{ volumegroup }}"
+      lv: "{{ volume5 }}"
+      size: 19%VG
+      force: yes
+  
+  - name: create filesystem {{ volume5 }}
+    filesystem: dev="/dev/{{ volumegroup }}/{{ volume5 }}" fstype=xfs
+
+  - name: Create a directory /{{ volume1 }}
+    file:
+      path: /{{ volume1 }}
+      state: directory
+
+  - name: Create a directory /{{ volume2 }}
+    file:
+      path: /{{ volume2 }}
+      state: directory
+
+  - name: Create a directory /{{ volume3 }}
+    file:
+      path: /{{ volume3 }}
+      state: directory
+
+  - name: Create a directory /{{ volume4 }}
+    file:
+      path: /{{ volume4 }}
+      state: directory
+
+  - name: Create a directory /{{ volume5 }}
+    file:
+      path: /{{ volume5 }}
+      state: directory
+
+ 
+  - name: mount /dev/{{ volumegroup }}/{{ volume1 }} into /{{ volume1 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume1 }}" 
+      path: "/{{ volume1 }}" 
+      state: mounted 
+      fstype: xfs
+
+  - name: mount /dev/{{ volumegroup }}/{{ volume2 }} into /{{ volume2 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume2 }}" 
+      path: "/{{ volume2 }}" 
+      state: mounted 
+      fstype: xfs
+
+  - name: mount /dev/{{ volumegroup }}/{{ volume3 }} into /{{ volume3 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume3 }}" 
+      path: "/{{ volume3 }}" 
+      state: mounted 
+      fstype: xfs
+
+  - name: mount /dev/{{ volumegroup }}/{{ volume4 }} into /{{ volume4 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume4 }}" 
+      path: "/{{ volume4 }}" 
+      state: mounted 
+      fstype: xfs
+
+  - name: mount /dev/{{ volumegroup }}/{{ volume5 }} into /{{ volume5 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume5 }}" 
+      path: "/{{ volume5 }}" 
+      state: mounted 
+      fstype: xfs
+  
+  - name: rsync from /{{move1}} to /{{ volume1 }}
+    command: rsync -aX --progress /{{move1}}/ /{{ volume1 }}/
+    register: move1_result
+
+  - name: show move1_result
+    debug: 
+      var: move1_result
+
+  - name: rsync from /{{move2}} to /{{ volume2 }}
+    command: rsync -aX --progress /{{move2}}/ /{{ volume2 }}/
+    register: move2_result
+
+  - name: show move2_result
+    debug: 
+      var: move2_result
+
+  - name: rsync from /{{move3}} to /{{ volume3 }}
+    command: rsync -aX --progress /{{move3}}/ /{{ volume3 }}/
+    register: move3_result
+
+  - name: show move3_result
+    debug: 
+      var: move3_result
+
+  - name: rsync from /{{move4}} to /{{ volume4 }}
+    command: rsync -aX --progress /{{move4}}/ /{{ volume4 }}/
+    register: move4_result
+
+  - name: show move4_result
+    debug: 
+      var: move4_result
+
+  - name: rsync from /{{move5}} to /{{ volume5 }}
+    command: rsync -aX --progress /{{move5}}/ /{{ volume5 }}/
+    register: move5_result
+
+  - name: show move5_result
+    debug: 
+      var: move5_result
+
+
+  - name: umount /dev/{{ volumegroup }}/{{ volume1 }} into /{{ volume1 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume1 }}" 
+      path: "/{{ volume1 }}" 
+      state: absent 
+
+
+  - name: umount /dev/{{ volumegroup }}/{{ volume2 }} into /{{ volume2 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume2 }}" 
+      path: "/{{ volume2 }}" 
+      state: absent 
+
+
+  - name: umount /dev/{{ volumegroup }}/{{ volume3 }} into /{{ volume3 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume3 }}" 
+      path: "/{{ volume3 }}" 
+      state: absent 
+
+
+  - name: umount /dev/{{ volumegroup }}/{{ volume4 }} into /{{ volume4 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume4 }}" 
+      path: "/{{ volume4 }}" 
+      state: absent 
+
+
+  - name: umount /dev/{{ volumegroup }}/{{ volume5 }} into /{{ volume5 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume5 }}" 
+      path: "/{{ volume5 }}" 
+      state: absent 
+
+
+
+  - name: remove directory /{{ volume1 }}
+    file:
+      path: /{{ volume1 }}
+      state: absent
+
+  - name: remove directory /{{ volume2 }}
+    file:
+      path: /{{ volume2 }}
+      state: absent
+
+  - name: remove directory /{{ volume3 }}
+    file:
+      path: /{{ volume3 }}
+      state: absent
+
+  - name: remove directory /{{ volume4 }}
+    file:
+      path: /{{ volume4 }}
+      state: absent
+
+  - name: remove directory /{{ volume5 }}
+    file:
+      path: /{{ volume5 }}
+      state: absent
+
+
+  - name: mount /dev/{{ volumegroup }}/{{ volume1 }} into /{{ move1 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume1 }}" 
+      path: "/{{ move1 }}" 
+      state: mounted 
+      fstype: xfs
+
+  - name: mount /dev/{{ volumegroup }}/{{ volume2 }} into /{{ move2 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume2 }}" 
+      path: "/{{ move2 }}" 
+      state: mounted 
+      fstype: xfs
+
+  - name: mount /dev/{{ volumegroup }}/{{ volume3 }} into /{{ move3 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume3 }}" 
+      path: "/{{ move3 }}" 
+      state: mounted 
+      fstype: xfs
+
+  - name: mount /dev/{{ volumegroup }}/{{ volume4 }} into /{{ move4 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume4 }}" 
+      path: "/{{ move4 }}" 
+      state: mounted 
+      fstype: xfs
+
+  - name: mount /dev/{{ volumegroup }}/{{ volume5 }} into /{{ move5 }}
+    mount: 
+      src: "/dev/{{ volumegroup }}/{{ volume5 }}" 
+      path: "/{{ move5 }}" 
+      state: mounted 
+      fstype: xfs
+ 
+  - name: configure fstab for /dev/{{ volumegroup }}/{{ volume1 }} to remove /{{ volume1 }}
+    lineinfile: 
+      dest: /etc/fstab
+      regexp: "^/dev/{{ volumegroup }}/{{ volume1 }}.*/{{ volume1 }}" 
+      state: absent
+
+  - name: configure fstab for /dev/{{ volumegroup }}/{{ volume2 }} to remove /{{ volume2 }}
+    lineinfile: 
+      dest: /etc/fstab
+      regexp: "^/dev/{{ volumegroup }}/{{ volume2 }}.*/{{ volume2 }}" 
+      state: absent
+
+  - name: configure fstab for /dev/{{ volumegroup }}/{{ volume3 }} to remove /{{ volume3 }}
+    lineinfile: 
+      dest: /etc/fstab
+      regexp: "^/dev/{{ volumegroup }}/{{ volume3 }}.*/{{ volume3 }}" 
+      state: absent
+
+  - name: configure fstab for /dev/{{ volumegroup }}/{{ volume4 }} to remove /{{ volume4 }}
+    lineinfile: 
+      dest: /etc/fstab
+      regexp: "^/dev/{{ volumegroup }}/{{ volume4 }}.*/{{ volume4 }}" 
+      state: absent
+
+  - name: configure fstab for /dev/{{ volumegroup }}/{{ volume5 }} to remove /{{ volume5 }}
+    lineinfile: 
+      dest: /etc/fstab
+      regexp: "^/dev/{{ volumegroup }}/{{ volume5 }}.*/{{ volume5 }}" 
+      state: absent
+
+  - name: configure fstab for /dev/{{ volumegroup }}/{{ volume1 }} into /{{ move1 }}
+    lineinfile: 
+      dest: /etc/fstab
+      regexp: "^/dev/{{ volumegroup }}/{{ volume1 }}" 
+      line: '/dev/{{ volumegroup }}/{{ volume1 }} /{{ move1 }} xfs defaults,auto,_netdev 0 2' 
+      create: yes
+
+  - name: configure fstab for /dev/{{ volumegroup }}/{{ volume2 }} into /{{ move2 }}
+    lineinfile: 
+      dest: /etc/fstab
+      regexp: "^/dev/{{ volumegroup }}/{{ volume2 }}" 
+      line: '/dev/{{ volumegroup }}/{{ volume2 }} /{{ move2 }} xfs defaults,auto,_netdev 0 2' 
+      create: yes
+
+  - name: configure fstab for /dev/{{ volumegroup }}/{{ volume3 }} into /{{ move3 }}
+    lineinfile: 
+      dest: /etc/fstab
+      regexp: "^/dev/{{ volumegroup }}/{{ volume3 }}" 
+      line: '/dev/{{ volumegroup }}/{{ volume3 }} /{{ move3 }} xfs defaults,auto,_netdev 0 2' 
+      create: yes
+
+  - name: configure fstab for /dev/{{ volumegroup }}/{{ volume4 }} into /{{ move4 }}
+    lineinfile: 
+      dest: /etc/fstab
+      regexp: "^/dev/{{ volumegroup }}/{{ volume4 }}" 
+      line: '/dev/{{ volumegroup }}/{{ volume4 }} /{{ move4 }} xfs defaults,auto,_netdev 0 2' 
+      create: yes
+
+  - name: configure fstab for /dev/{{ volumegroup }}/{{ volume5 }} into /{{ move5 }}
+    lineinfile: 
+      dest: /etc/fstab
+      regexp: "^/dev/{{ volumegroup }}/{{ volume5 }}" 
+      line: '/dev/{{ volumegroup }}/{{ volume5 }} /{{ move5 }} xfs defaults,auto,_netdev 0 2' 
+      create: yes
+
+

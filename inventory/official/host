@@ -1,0 +1,1 @@
+maquina1 ansible_host=127.0.0.1 ansible_port=2222 ansible_user=vagrant ansible_private_key_file='/opt/project/repositories-ansible-azure/.vagrant/machines/maquina1/virtualbox/private_key' ansible_ssh_common_args='-o StrictHostKeyChecking=no'

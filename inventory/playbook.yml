@@ -1,0 +1,38 @@
+---
+- hosts: localhost
+  gather_facts: yes 
+  connection: local 
+  tasks:
+    - name: get name of vagrant machines
+      shell: vagrant status | grep maquina | cut -d " " -f1
+      register: running_machines
+
+    - name : set facts for name
+      set_fact: machines="{{running_machines.stdout_lines | list }}"
+    - debug:	
+        msg: "{{item}}"
+      with_items:
+        - "{{ machines}}"
+
+    - name: get the port vagrant for each machine
+      shell: vagrant port {{item}} | grep guest | tr ' ' '\n' | sed -n '8p'
+      register: running_ports
+      with_items:
+        - "{{ running_machines.stdout_lines | list }}"
+    - name : set facts for ports
+      set_fact: ports="{{running_ports |json_query('results[*].stdout_lines[0]') | list }}"
+    - debug:
+        msg: "{{item}}"
+      with_items:
+        - "{{ ports }}"
+    - name: initializate dynamic inventory as file
+      copy: 
+        dest: "/opt/project/guide-lvm-partition/inventory/host"
+        content: ""
+    - name: create dynamic inventory as file
+      lineinfile:
+        path: "/opt/project/guide-lvm-partition/inventory/host"
+        line: "{{item.0}} ansible_host=127.0.0.1 ansible_port={{ item.1 }} ansible_user=vagrant ansible_private_key_file='/opt/project/guide-lvm-partition/.vagrant/machines/{{item.0}}/virtualbox/private_key' ansible_ssh_common_args='-o StrictHostKeyChecking=no'"
+      loop: "{{ machines  | zip(ports) | list }}"
+      loop_control:
+        index_var: index
