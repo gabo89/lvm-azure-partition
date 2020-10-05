@@ -74,18 +74,17 @@
     debug:
       var: salidasdb
 
-
 #build the volumes that will form the pv and vg
 
   - name: Build a list of all the volume names sdb missing.
     set_fact:
       volumesforvg: "[ '{{ salidasda.disk.dev }}1' ]"
-    when: salidasda.disk.dev is defined    
+    when: salidasda.disk is defined   
 
   - name: Build a list of all the volume names sda missing.
     set_fact:
       volumesforvg: "[ '{{ salidasdb.disk.dev }}1' ]"
-    when: salidasdb.disk.dev is defined  
+    when: salidasdb.disk is defined  
 
   - name: Print the volume names to the console.
     debug: var=volumesforvg

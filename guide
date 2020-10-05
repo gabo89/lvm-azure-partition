@@ -1,66 +1,25 @@
- fdisk /dev/sdc
- fdisk /dev/sdd
- lsblk
- pvcreate /dev/sdc1 /dev/sdd1 
- vgcreate myvolgroup /dev/sdc1 /dev/sdd1
- lvcreate -l 25%VG -n tmpfolder myvolgroup
- lvcreate -l 25%VG -n varfolder myvolgroup
- lvcreate -l 25%VG -n optfolder myvolgroup
- lvcreate -l 25%VG -n homefolder myvolgroup
 
 
-mkdir /newvar/
-mkdir /newopt/
-
-mkfs.ext4 /dev/mapper/myvolgroup-tmpfolder
-mkfs.ext4 /dev/mapper/myvolgroup-varfolder
-mkfs.ext4 /dev/mapper/myvolgroup-optfolder
-mkfs.ext4 /dev/mapper/myvolgroup-homefolder
 
 
-#nothing to recover at tmp
-umount /tmp
-mount /dev/mapper/myvolgroup-tmpfolder /tmp
-
-mount /dev/mapper/myvolgroup-homefolder /newhome 
-rsync -aX /home/ /newhome/
-umount -l /home
-mount /dev/mapper/myvolgroup-homefolder /home
-rsync -aX /newhome/ /home/
-rm -rf /newhome
-
-mount /dev/mapper/myvolgroup-varfolder /newvar
-rsync -aX /var/ /newvar/
-umount -l /var
-mount /dev/mapper/myvolgroup-varfolder /var
-rsync -aX /newvar/ /var/
-rm -rf /newvar
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda      8:0    0   40G  0 disk 
+└─sda1   8:1    0   40G  0 part /
+sdb      8:16   0  100G  0 disk 
 
 
-mount /dev/mapper/myvolgroup-optfolder /newopt
-rsync -aX /opt/ /newopt/
-umount -l /opt
-mount /dev/mapper/myvolgroup-optfolder /opt
-rsync -aX /newopt/ /opt/
-rm -rf /newopt
-
-#configure fstab
-/dev/mapper/myvolgroup-homefolder /home                  ext4    defaults        1 2
-/dev/mapper/myvolgroup-optfolder /opt                    ext4    defaults        1 2
-/dev/mapper/myvolgroup-tmpfolder /tmp                    ext4    defaults        1 2
-/dev/mapper/myvolgroup-varfolder /var                    ext4    defaults        1 2
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 
-#reboot
+[vagrant@lvm-node-1 ~]$ lsblk
+NAME                        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                           8:0    0   40G  0 disk 
+└─sda1                        8:1    0   40G  0 part /
+sdb                           8:16   0  100G  0 disk 
+└─sdb1                        8:17   0  100G  0 part 
+  ├─myvolgroup-hompartition 253:0    0   20G  0 lvm  /home
+  ├─myvolgroup-varpartition 253:1    0   20G  0 lvm  /var
+  ├─myvolgroup-tmppartition 253:2    0   20G  0 lvm  /tmp
+  ├─myvolgroup-optpartition 253:3    0   20G  0 lvm  /opt
+  └─myvolgroup-etcpartition 253:4    0   19G  0 lvm  /etc
 
-lvremove /dev/rootvg/tmplv 
-lvremove /dev/rootvg/varlv 
-lvremove /dev/rootvg/homelv 
-lvremove /dev/rootvg/optlv 
-
-
-lvextend -l 50%VG /dev/rootvg/rootlv
-lvextend -l 50%VG /dev/rootvg/usrlv
-
-resize2fs /dev/rootvg/rootlv
-resize2fs /dev/rootvg/usrlv
