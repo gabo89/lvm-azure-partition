@@ -23,30 +23,23 @@ mkfs.ext4 /dev/mapper/myvolgroup-homefolder
 
 
 #nothing to recover at tmp
-umount /tmp
+umount -l /tmp
 mount /dev/mapper/myvolgroup-tmpfolder /tmp
 
 mount /dev/mapper/myvolgroup-homefolder /newhome 
 rsync -aX /home/ /newhome/
 umount -l /home
 mount /dev/mapper/myvolgroup-homefolder /home
-rsync -aX /newhome/ /home/
-rm -rf /newhome
 
 mount /dev/mapper/myvolgroup-varfolder /newvar
 rsync -aX /var/ /newvar/
 umount -l /var
 mount /dev/mapper/myvolgroup-varfolder /var
-rsync -aX /newvar/ /var/
-rm -rf /newvar
-
 
 mount /dev/mapper/myvolgroup-optfolder /newopt
 rsync -aX /opt/ /newopt/
 umount -l /opt
 mount /dev/mapper/myvolgroup-optfolder /opt
-rsync -aX /newopt/ /opt/
-rm -rf /newopt
 
 #configure fstab
 /dev/mapper/myvolgroup-homefolder /home                  ext4    defaults        1 2
