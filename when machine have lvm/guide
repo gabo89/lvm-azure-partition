@@ -35,17 +35,17 @@ umount -l /var
 mount /dev/mapper/myvolgroup-varfolder /var
 ------------------------------------------------------------
 mount /dev/mapper/myvolgroup-optfolder /newopt
-rsync -aX --delete --force --checksum --progres /opt/ /newopt/
+rsync -aX --delete --force --checksum --progress /opt/ /newopt/
 umount -l /opt
 mount /dev/mapper/myvolgroup-optfolder /opt
 ------------------------------------------------------------
 mount /dev/mapper/myvolgroup-homefolder /newhome 
-rsync -aX --delete --force --checksum --progres /home/ /newhome/
+rsync -aX --delete --force --checksum --progress /home/ /newhome/
 umount -l /home
 mount /dev/mapper/myvolgroup-homefolder /home
 ------------------------------------------------------------
 mount /dev/mapper/myvolgroup-usrfolder /newusr
-rsync -aX --delete --force --checksum --progres /usr/ /newusr/
+rsync -aX --delete --force --checksum --progress /usr/ /newusr/
 umount -l /usr
 mount /dev/mapper/myvolgroup-usrfolder /usr
 
