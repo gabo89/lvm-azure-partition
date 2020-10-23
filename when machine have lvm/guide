@@ -14,6 +14,7 @@
 
 mkdir /newvar/
 mkdir /newopt/
+mkdir /newhome/
 
 mkfs.ext4 /dev/mapper/myvolgroup-tmpfolder
 mkfs.ext4 /dev/mapper/myvolgroup-varfolder
