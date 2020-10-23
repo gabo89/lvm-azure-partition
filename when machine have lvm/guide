@@ -1,51 +1,62 @@
  fdisk /dev/sdc
- fdisk /dev/sdd
  lsblk
 
  yum install lvm2
 
  pvcreate /dev/sdc1 /dev/sdd1 
- vgcreate myvolgroup /dev/sdc1 /dev/sdd1
- lvcreate -l 25%VG -n tmpfolder myvolgroup
- lvcreate -l 25%VG -n varfolder myvolgroup
- lvcreate -l 25%VG -n optfolder myvolgroup
- lvcreate -l 25%VG -n homefolder myvolgroup
-
-
+ vgcreate myvolgroup /dev/sdc1 
+ lvcreate -l 20%VG -n tmpfolder myvolgroup
+ lvcreate -l 20%VG -n varfolder myvolgroup
+ lvcreate -l 20%VG -n optfolder myvolgroup
+ lvcreate -l 20%VG -n homefolder myvolgroup
+ lvcreate -l 20%VG -n usrfolder myvolgroup
+ 
+ 
+mkdir /newtmp/
 mkdir /newvar/
 mkdir /newopt/
 mkdir /newhome/
+mkdir /newusr/
 
 mkfs.ext4 /dev/mapper/myvolgroup-tmpfolder
 mkfs.ext4 /dev/mapper/myvolgroup-varfolder
 mkfs.ext4 /dev/mapper/myvolgroup-optfolder
 mkfs.ext4 /dev/mapper/myvolgroup-homefolder
+mkfs.ext4 /dev/mapper/myvolgroup-usrfolder
 
-
-#nothing to recover at tmp
+mount /dev/mapper/myvolgroup-homefolder /newtmp
+rsync -aX --delete --force --checksum --progress /tmp/ /newtmp/
 umount -l /tmp
 mount /dev/mapper/myvolgroup-tmpfolder /tmp
-
-mount /dev/mapper/myvolgroup-homefolder /newhome 
-rsync -aX /home/ /newhome/
-umount -l /home
-mount /dev/mapper/myvolgroup-homefolder /home
-
+------------------------------------------------------------
 mount /dev/mapper/myvolgroup-varfolder /newvar
-rsync -aX /var/ /newvar/
+rsync -aX --delete --force --checksum --progress /var/ /newvar/
 umount -l /var
 mount /dev/mapper/myvolgroup-varfolder /var
-
+------------------------------------------------------------
 mount /dev/mapper/myvolgroup-optfolder /newopt
-rsync -aX /opt/ /newopt/
+rsync -aX --delete --force --checksum --progres /opt/ /newopt/
 umount -l /opt
 mount /dev/mapper/myvolgroup-optfolder /opt
+------------------------------------------------------------
+mount /dev/mapper/myvolgroup-homefolder /newhome 
+rsync -aX --delete --force --checksum --progres /home/ /newhome/
+umount -l /home
+mount /dev/mapper/myvolgroup-homefolder /home
+------------------------------------------------------------
+mount /dev/mapper/myvolgroup-usrfolder /newusr
+rsync -aX --delete --force --checksum --progres /usr/ /newusr/
+umount -l /usr
+mount /dev/mapper/myvolgroup-usrfolder /usr
+
+
 
 #configure fstab
 /dev/mapper/myvolgroup-homefolder /home                  ext4    defaults        1 2
 /dev/mapper/myvolgroup-optfolder /opt                    ext4    defaults        1 2
 /dev/mapper/myvolgroup-tmpfolder /tmp                    ext4    defaults        1 2
 /dev/mapper/myvolgroup-varfolder /var                    ext4    defaults        1 2
+/dev/mapper/myvolgroup-optfolder /usr                    ext4    defaults        1 2
 
 
 #reboot
