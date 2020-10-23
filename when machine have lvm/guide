@@ -3,7 +3,7 @@
 
  yum install lvm2
 
- pvcreate /dev/sdc1 /dev/sdd1 
+ pvcreate /dev/sdc1 
  vgcreate myvolgroup /dev/sdc1 
  lvcreate -l 20%VG -n tmpfolder myvolgroup
  lvcreate -l 20%VG -n varfolder myvolgroup
