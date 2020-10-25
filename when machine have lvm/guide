@@ -9,20 +9,17 @@
  lvcreate -l 20%VG -n varfolder myvolgroup
  lvcreate -l 20%VG -n optfolder myvolgroup
  lvcreate -l 20%VG -n homefolder myvolgroup
- lvcreate -l 20%VG -n usrfolder myvolgroup
  
  
 mkdir /newtmp/
 mkdir /newvar/
 mkdir /newopt/
 mkdir /newhome/
-mkdir /newusr/
 
 mkfs.ext4 /dev/mapper/myvolgroup-tmpfolder
 mkfs.ext4 /dev/mapper/myvolgroup-varfolder
 mkfs.ext4 /dev/mapper/myvolgroup-optfolder
 mkfs.ext4 /dev/mapper/myvolgroup-homefolder
-mkfs.ext4 /dev/mapper/myvolgroup-usrfolder
 
 mount /dev/mapper/myvolgroup-homefolder /newtmp
 rsync -aX --delete --force --checksum --progress /tmp/ /newtmp/
@@ -44,27 +41,23 @@ rsync -aX --delete --force --checksum --progress /home/ /newhome/
 umount -l /home
 mount /dev/mapper/myvolgroup-homefolder /home
 ------------------------------------------------------------
-mount /dev/mapper/myvolgroup-usrfolder /newusr
-rsync -aX --delete --force --checksum --progress /usr/ /newusr/
-umount -l /usr
-mount /dev/mapper/myvolgroup-usrfolder /usr
+
 
 
 
 #configure fstab
-/dev/mapper/myvolgroup-homefolder /home                  ext4    defaults        1 2
-/dev/mapper/myvolgroup-optfolder /opt                    ext4    defaults        1 2
 /dev/mapper/myvolgroup-tmpfolder /tmp                    ext4    defaults        1 2
 /dev/mapper/myvolgroup-varfolder /var                    ext4    defaults        1 2
-/dev/mapper/myvolgroup-optfolder /usr                    ext4    defaults        1 2
+/dev/mapper/myvolgroup-optfolder /opt                    ext4    defaults        1 2
+/dev/mapper/myvolgroup-homefolder /home                  ext4    defaults        1 2
 
 
 #reboot
 
 lvremove /dev/rootvg/tmplv 
 lvremove /dev/rootvg/varlv 
-lvremove /dev/rootvg/homelv 
 lvremove /dev/rootvg/optlv 
+lvremove /dev/rootvg/homelv 
 
 
 lvextend -l 50%VG /dev/rootvg/rootlv
