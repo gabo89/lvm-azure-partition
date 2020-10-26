@@ -5,10 +5,10 @@
 
  pvcreate /dev/sdc1 
  vgcreate myvolgroup /dev/sdc1 
- lvcreate -l 20%VG -n tmpfolder myvolgroup
- lvcreate -l 20%VG -n varfolder myvolgroup
- lvcreate -l 20%VG -n optfolder myvolgroup
- lvcreate -l 20%VG -n homefolder myvolgroup
+ lvcreate -l 25%VG -n tmpfolder myvolgroup
+ lvcreate -l 25%VG -n varfolder myvolgroup
+ lvcreate -l 25%VG -n optfolder myvolgroup
+ lvcreate -l 25%VG -n homefolder myvolgroup
  
  
 mkdir /newtmp/
